@@ -68,6 +68,31 @@ def list_tokens(options: Dict[str, str]) -> None:
         sys.exit(1)
 
 
+@cli.command("list-servers")
+@click.pass_obj
+def list_servers(options: Dict[str, str]) -> None:
+    url = "{url}/server".format(**options)
+    admin_token = options["admin_token"]
+
+    try:
+        res = www.get(url, admin_token)
+        headers = [
+            "id",
+            "token_id",
+            "ip",
+            "port",
+            "key_type",
+            "public_key",
+            "created"]
+        tabulate(headers, res["servers"])
+    except www.WWWError as e:
+        sys.stderr.write("ERROR: {}\n".format(e))
+        sys.exit(1)
+    except (KeyError, TypeError):
+        sys.stderr.write("ERROR: invalid server list\n")
+        sys.exit(1)
+
+
 def tabulate(header: List[str], rows: List[Dict[str, str]]) -> None:
     """
     Print rows as a table with the given headers.
