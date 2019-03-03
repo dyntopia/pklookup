@@ -42,11 +42,13 @@ def add_token(options: Dict[str, str], role: str, description: str) -> None:
 
     try:
         res = www.post(url, admin_token, role=role, description=description)
+        print("{} token: {token}".format(role, **res))
     except www.WWWError as e:
         sys.stderr.write("ERROR: {}\n".format(e))
         sys.exit(1)
-
-    print("{} token: {token}".format(role, **res))
+    except (KeyError, TypeError):
+        sys.stderr.write("ERROR: invalid response\n")
+        sys.exit(1)
 
 
 @cli.command("list-tokens")

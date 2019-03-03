@@ -128,6 +128,34 @@ class AddTokenTest(TestCase):
         self.assertEqual(result.exit_code, 0)
         self.assertTrue("abcd" in result.output)
 
+    @patch("pklookup.www.post")  # type: ignore
+    def test_invalid_type(self, mock: MagicMock) -> None:
+        mock.return_value = "abcd"
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "add-token",
+            "--role=admin",
+        ])
+        self.assertTrue("invalid response" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.post")  # type: ignore
+    def test_missing_token(self, mock: MagicMock) -> None:
+        mock.return_value = {"token123": "abcd"}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "add-token",
+            "--role=admin",
+        ])
+        self.assertTrue("invalid response" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
 
 class ListTokenTest(TestCase):
     def setUp(self) -> None:
