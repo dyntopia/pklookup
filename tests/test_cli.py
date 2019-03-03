@@ -144,3 +144,99 @@ class AddTokenTest(TestCase):
             self.assertEqual(mock.call_count, 1)
             self.assertEqual(result.exit_code, 0)
             self.assertTrue("abcd" in result.output)
+
+
+class ListTokenTest(TestCase):
+    def setUp(self) -> None:
+        self.config = tempfile.NamedTemporaryFile()
+        self.config.write(b"""
+                          [pklookup]\n
+                           url = https://url:port\n
+                           admin_token = abcd\n
+                           """)
+        self.config.flush()
+
+    def tearDown(self) -> None:
+        self.config.close()
+
+    @patch("pklookup.www.get")  # type: ignore
+    def test_invalid_type(self, mock: MagicMock) -> None:
+        mock.return_value = "abcd"
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "list-tokens"
+        ])
+        self.assertTrue("invalid token list" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.get")  # type: ignore
+    def test_missing_tokens(self, mock: MagicMock) -> None:
+        mock.return_value = {"abc": [{
+            "id": 0,
+            "role": "x",
+            "description": "y",
+            "created": "..."
+        }]}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "list-tokens"
+        ])
+        self.assertTrue("invalid token list" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.get")  # type: ignore
+    def test_missing_id_field(self, mock: MagicMock) -> None:
+        mock.return_value = {"tokens": [{
+            "role": "x",
+            "description": "y",
+            "created": "..."
+        }]}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "list-tokens"
+        ])
+        self.assertTrue("invalid token list" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.get")  # type: ignore
+    def test_failure_exception(self, mock: MagicMock) -> None:
+        mock.side_effect = www.WWWError
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "list-tokens"
+        ])
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.get")  # type: ignore
+    def test_success(self, mock: MagicMock) -> None:
+        mock.return_value = {"tokens": [{
+            "id": "1234",
+            "role": "rrrrr",
+            "description": "ddddd",
+            "created": "cccc"
+        }]}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "list-tokens"
+        ])
+
+        for key, value in mock.return_value["tokens"][0].items():
+            self.assertTrue(key in result.output)
+            self.assertTrue(value in result.output)
+
+        self.assertEqual(result.exit_code, 0)

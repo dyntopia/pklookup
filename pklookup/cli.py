@@ -2,9 +2,10 @@ import configparser
 import getpass
 import os
 import sys
-from typing import Dict
+from typing import Dict, List
 
 import click
+import texttable
 
 from . import www
 
@@ -46,3 +47,32 @@ def add_token(options: Dict[str, str], role: str, description: str) -> None:
         sys.exit(1)
 
     print("{} token: {token}".format(role, **res))
+
+
+@cli.command("list-tokens")
+@click.pass_obj
+def list_tokens(options: Dict[str, str]) -> None:
+    url = "{url}/token".format(**options)
+    admin_token = options["admin_token"]
+
+    try:
+        res = www.get(url, admin_token)
+        tabulate(["id", "role", "description", "created"], res["tokens"])
+    except www.WWWError as e:
+        sys.stderr.write("ERROR: {}\n".format(e))
+        sys.exit(1)
+    except (KeyError, TypeError):
+        sys.stderr.write("ERROR: invalid token list\n")
+        sys.exit(1)
+
+
+def tabulate(header: List[str], rows: List[Dict[str, str]]) -> None:
+    """
+    Print rows as a table with the given headers.
+    """
+    table = texttable.Texttable()
+    table.set_deco(table.HEADER | table.VLINES)
+    table.header(header)
+    for row in rows:
+        table.add_row([row[key] for key in header])
+    print(table.draw())
