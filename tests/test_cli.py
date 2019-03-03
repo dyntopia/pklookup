@@ -43,6 +43,18 @@ class CliTest(TestCase):
 
 
 class AddTokenTest(TestCase):
+    def setUp(self) -> None:
+        self.config = tempfile.NamedTemporaryFile()
+        self.config.write(b"""
+                          [pklookup]\n
+                           url = https://url:port\n
+                           admin_token = abcd\n
+                           """)
+        self.config.flush()
+
+    def tearDown(self) -> None:
+        self.config.close()
+
     def test_no_role(self) -> None:
         runner = CliRunner()
         result = runner.invoke(cli.add_token)
@@ -52,98 +64,69 @@ class AddTokenTest(TestCase):
     def test_invalid_role(self, mock: MagicMock) -> None:
         mock.return_value = {"token": "123"}
 
-        with tempfile.NamedTemporaryFile() as tmp:
-            tmp.write(b"""
-                      [pklookup]\n
-                      url = https://url:port\n
-                      admin_token = abcd\n
-                      """)
-            tmp.flush()
-
-            runner = CliRunner()
-            result = runner.invoke(cli.cli, [
-                "--config-file",
-                tmp.name,
-                "add-token",
-                "--role=xyz",
-                "--description=desc",
-            ])
-            self.assertNotEqual(result.exit_code, 0)
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "add-token",
+            "--role=xyz",
+            "--description=desc",
+        ])
+        self.assertNotEqual(result.exit_code, 0)
 
     @patch("pklookup.www.post")  # type: ignore
     def test_failure_exception(self, mock: MagicMock) -> None:
-        with tempfile.NamedTemporaryFile() as tmp:
-            tmp.write(b"""
-                      [pklookup]\n
-                      url = https://url:port\n
-                      admin_token = abcd\n
-                      """)
-            tmp.flush()
+        mock.side_effect = www.WWWError
 
-            mock.side_effect = www.WWWError
-            runner = CliRunner()
-            result = runner.invoke(cli.cli, [
-                "--config-file",
-                tmp.name,
-                "add-token",
-                "--role=server",
-                "--description=desc",
-            ])
-            self.assertEqual(result.exit_code, 1)
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "add-token",
+            "--role=server",
+            "--description=desc",
+        ])
+        self.assertEqual(result.exit_code, 1)
 
     @patch("pklookup.www.post")  # type: ignore
     def test_success_admin(self, mock: MagicMock) -> None:
-        with tempfile.NamedTemporaryFile() as tmp:
-            tmp.write(b"""
-                      [pklookup]\n
-                      url = https://url:port\n
-                      admin_token = abcd\n
-                      """)
-            tmp.flush()
+        mock.return_value = {"token": "xyz"}
 
-            mock.return_value = {"token": "xyz"}
-            runner = CliRunner()
-            result = runner.invoke(cli.cli, [
-                "--config-file",
-                tmp.name,
-                "add-token",
-                "--role=admin",
-                "--description=desc",
-            ])
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "add-token",
+            "--role=admin",
+            "--description=desc",
+        ])
 
-            args, kwargs = mock.call_args
-            self.assertEqual(args, ("https://url:port/api/v1/token", "abcd"))
-            self.assertEqual(kwargs, {"role": "admin", "description": "desc"})
-            self.assertEqual(mock.call_count, 1)
-            self.assertEqual(result.exit_code, 0)
-            self.assertTrue("xyz" in result.output)
+        args, kwargs = mock.call_args
+        self.assertEqual(args, ("https://url:port/api/v1/token", "abcd"))
+        self.assertEqual(kwargs, {"role": "admin", "description": "desc"})
+        self.assertEqual(mock.call_count, 1)
+        self.assertEqual(result.exit_code, 0)
+        self.assertTrue("xyz" in result.output)
 
     @patch("pklookup.www.post")  # type: ignore
     def test_success_server(self, mock: MagicMock) -> None:
-        with tempfile.NamedTemporaryFile() as tmp:
-            tmp.write(b"""
-                      [pklookup]\n
-                      url = https://url:port\n
-                      admin_token = abcd\n
-                      """)
-            tmp.flush()
+        mock.return_value = {"token": "abcd"}
 
-            mock.return_value = {"token": "abcd"}
-            runner = CliRunner()
-            result = runner.invoke(cli.cli, [
-                "--config-file",
-                tmp.name,
-                "add-token",
-                "--role=server",
-                "--description=desc",
-            ])
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "add-token",
+            "--role=server",
+            "--description=desc",
+        ])
 
-            args, kwargs = mock.call_args
-            self.assertEqual(args, ("https://url:port/api/v1/token", "abcd"))
-            self.assertEqual(kwargs, {"role": "server", "description": "desc"})
-            self.assertEqual(mock.call_count, 1)
-            self.assertEqual(result.exit_code, 0)
-            self.assertTrue("abcd" in result.output)
+        args, kwargs = mock.call_args
+        self.assertEqual(args, ("https://url:port/api/v1/token", "abcd"))
+        self.assertEqual(kwargs, {"role": "server", "description": "desc"})
+        self.assertEqual(mock.call_count, 1)
+        self.assertEqual(result.exit_code, 0)
+        self.assertTrue("abcd" in result.output)
 
 
 class ListTokenTest(TestCase):
