@@ -124,7 +124,6 @@ def tabulate(header: List[str], rows: List[Dict[str, str]]) -> None:
     Print rows as a table with the given headers.
     """
     table = texttable.Texttable()
-    table.set_deco(table.HEADER | table.VLINES)
     table.header(header)
     for row in rows:
         table.add_row([row[key] for key in header])
