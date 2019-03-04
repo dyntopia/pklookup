@@ -26,7 +26,14 @@ def cli(ctx: click.Context, config_file: str) -> None:
     if not admin_token:
         admin_token = getpass.getpass("Admin token: ")
 
-    ctx.obj = {"admin_token": admin_token, "url": "{}/api/v1".format(url)}
+    known_hosts = os.path.expanduser(config.get("pklookup", "known_hosts",
+                                                fallback="~/known_hosts"))
+
+    ctx.obj = {
+        "admin_token": admin_token,
+        "url": "{}/api/v1".format(url),
+        "known_hosts": known_hosts
+    }
 
 
 @cli.command("add-token")
@@ -117,6 +124,31 @@ def list_servers(options: Dict[str, str]) -> None:
     except (KeyError, TypeError):
         sys.stderr.write("ERROR: invalid server list\n")
         sys.exit(1)
+
+
+@cli.command("save-key")
+@click.option("--id", "server_id", type=int, required=True)
+@click.pass_obj
+def save_key(options: Dict[str, str], server_id: int) -> None:
+    url = "{url}/server".format(**options)
+    admin_token = options["admin_token"]
+
+    try:
+        res = www.get(url, admin_token, id=server_id)
+        entry = "{ip} {public_key}".format(**res["servers"][0])
+    except www.WWWError as e:
+        sys.stderr.write("ERROR: {}\n".format(e))
+        sys.exit(1)
+    except IndexError:
+        sys.stderr.write("ERROR: invalid server id\n")
+        sys.exit(1)
+    except (KeyError, TypeError):
+        sys.stderr.write("ERROR: invalid server list\n")
+        sys.exit(1)
+
+    print("{known_hosts}: saving '{}'".format(entry, **options))
+    with open(options["known_hosts"], "a") as f:
+        f.write("{}\n".format(entry))
 
 
 def tabulate(header: List[str], rows: List[Dict[str, str]]) -> None:

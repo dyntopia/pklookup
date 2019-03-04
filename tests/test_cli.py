@@ -473,3 +473,169 @@ class ListServerTest(TestCase):
             self.assertTrue(value in result.output)
 
         self.assertEqual(result.exit_code, 0)
+
+
+class SaveKeyTest(TestCase):
+    def setUp(self) -> None:
+        self.config = tempfile.NamedTemporaryFile()
+        self.known_hosts = tempfile.NamedTemporaryFile()
+        self.config.write("""
+                          [pklookup]\n
+                          url = https://url:port\n
+                          admin_token = abcd\n
+                          known_hosts = {}\n
+                          """.format(self.known_hosts.name).encode("utf-8"))
+        self.config.flush()
+
+    def tearDown(self) -> None:
+        self.config.close()
+        self.known_hosts.close()
+
+    def test_missing_id(self) -> None:
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "save-key",
+        ])
+        self.assertNotEqual(result.exit_code, 0)
+
+    def test_invalid_id(self) -> None:
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "save-key",
+            "--id=asdf"
+        ])
+        self.assertNotEqual(result.exit_code, 0)
+
+    @patch("pklookup.www.get")  # type: ignore
+    def test_invalid_type(self, mock: MagicMock) -> None:
+        mock.return_value = "abcd"
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "save-key",
+            "--id=0"
+        ])
+        self.assertTrue("invalid server list" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.get")  # type: ignore
+    def test_missing_servers(self, mock: MagicMock) -> None:
+        mock.return_value = {"abc": [{
+            "id": 0,
+            "token_id": "1",
+            "ip": "1.2.3.4",
+            "port": "1234",
+            "key_type": "rsa",
+            "public_key": "...",
+            "created": "..."
+        }]}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "save-key",
+            "--id=0"
+        ])
+        self.assertTrue("invalid server list" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.get")  # type: ignore
+    def test_missing_ip_field(self, mock: MagicMock) -> None:
+        mock.return_value = {"servers": [{
+            "id": "0",
+            "token_id": "1",
+            "port": "1234",
+            "key_type": "rsa",
+            "public_key": "...",
+            "created": "..."
+        }]}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "save-key",
+            "--id=0"
+        ])
+        self.assertTrue("invalid server list" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.get")  # type: ignore
+    def test_missing_public_key_field(self, mock: MagicMock) -> None:
+        mock.return_value = {"servers": [{
+            "id": "0",
+            "token_id": "1",
+            "ip": "1.2.3.4",
+            "port": "1234",
+            "key_type": "rsa",
+            "created": "..."
+        }]}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "save-key",
+            "--id=0"
+        ])
+        self.assertTrue("invalid server list" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.get")  # type: ignore
+    def test_empty_servers(self, mock: MagicMock) -> None:
+        mock.return_value = {"servers": []}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "save-key",
+            "--id=0"
+        ])
+        self.assertTrue("invalid server id" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.get")  # type: ignore
+    def test_failure_exception(self, mock: MagicMock) -> None:
+        mock.side_effect = www.WWWError("errmsg")
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "save-key",
+            "--id=0"
+        ])
+        self.assertTrue("errmsg" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.get")  # type: ignore
+    def test_success(self, mock: MagicMock) -> None:
+        mock.return_value = {"servers": [{
+            "id": "0",
+            "token_id": "1",
+            "ip": "1.2.3.4",
+            "port": "1234",
+            "key_type": "rsa",
+            "public_key": "type key comment",
+            "created": "..."
+        }]}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "save-key",
+            "--id=0"
+        ])
+
+        self.assertEqual(self.known_hosts.read(),
+                         b"1.2.3.4 type key comment\n")
+        self.assertEqual(result.exit_code, 0)
