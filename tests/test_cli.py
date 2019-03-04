@@ -253,6 +253,123 @@ class ListTokenTest(TestCase):
         self.assertEqual(result.exit_code, 0)
 
 
+class AddServerTest(TestCase):
+    def setUp(self) -> None:
+        self.config = tempfile.NamedTemporaryFile()
+        self.config.write(b"""
+                          [pklookup]\n
+                           url = https://url:port\n
+                           admin_token = abcd\n
+                           """)
+        self.config.flush()
+
+    def tearDown(self) -> None:
+        self.config.close()
+
+    def test_no_public_key(self) -> None:
+        runner = CliRunner()
+        result = runner.invoke(cli.add_server)
+        self.assertNotEqual(result.exit_code, 0)
+
+    def test_public_key_not_found(self) -> None:
+        with tempfile.NamedTemporaryFile() as tmp:
+            pass
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "add-server",
+            "--public-key=@{}".format(tmp.name),
+        ])
+        self.assertTrue("No such file or directory" in result.output)
+        self.assertNotEqual(result.exit_code, 0)
+
+    @patch("pklookup.www.post")  # type: ignore
+    def test_failure_exception(self, mock: MagicMock) -> None:
+        mock.side_effect = www.WWWError("errmsg")
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "add-server",
+            "--public-key=asdf",
+        ])
+        self.assertTrue("errmsg" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.post")  # type: ignore
+    def test_success_arg(self, mock: MagicMock) -> None:
+        mock.return_value = {"message": "xyz"}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "add-server",
+            "--public-key=asdf",
+        ])
+
+        args, kwargs = mock.call_args
+        self.assertEqual(args, ("https://url:port/api/v1/server", "abcd"))
+        self.assertEqual(kwargs, {"public_key": "asdf"})
+        self.assertEqual(mock.call_count, 1)
+        self.assertEqual(result.exit_code, 0)
+        self.assertTrue("xyz" in result.output)
+
+    @patch("pklookup.www.post")  # type: ignore
+    def test_success_file(self, mock: MagicMock) -> None:
+        mock.return_value = {"message": "xyz"}
+
+        with tempfile.NamedTemporaryFile() as tmp:
+            tmp.write(b"  first line\n second line\n")
+            tmp.flush()
+
+            runner = CliRunner()
+            result = runner.invoke(cli.cli, [
+                "--config-file",
+                self.config.name,
+                "add-server",
+                "--public-key=@{}".format(tmp.name),
+            ])
+
+        args, kwargs = mock.call_args
+        self.assertEqual(args, ("https://url:port/api/v1/server", "abcd"))
+        self.assertEqual(kwargs, {"public_key": "first line"})
+        self.assertEqual(mock.call_count, 1)
+        self.assertEqual(result.exit_code, 0)
+        self.assertTrue("xyz" in result.output)
+
+    @patch("pklookup.www.post")  # type: ignore
+    def test_invalid_type(self, mock: MagicMock) -> None:
+        mock.return_value = "abcd"
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "add-server",
+            "--public-key=asdf",
+        ])
+        self.assertTrue("invalid response" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.post")  # type: ignore
+    def test_missing_message(self, mock: MagicMock) -> None:
+        mock.return_value = {"msg123": "abcd"}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "add-server",
+            "--public-key=asdf",
+        ])
+        self.assertTrue("invalid response" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+
 class ListServerTest(TestCase):
     def setUp(self) -> None:
         self.config = tempfile.NamedTemporaryFile()

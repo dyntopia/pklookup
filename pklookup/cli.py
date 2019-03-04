@@ -68,6 +68,32 @@ def list_tokens(options: Dict[str, str]) -> None:
         sys.exit(1)
 
 
+@cli.command("add-server")
+@click.option("--public-key", required=True)
+@click.pass_obj
+def add_server(options: Dict[str, str], public_key: str) -> None:
+    url = "{url}/server".format(**options)
+    admin_token = options["admin_token"]
+
+    if public_key.startswith("@"):
+        try:
+            with open(public_key[1:], "r") as f:
+                public_key = f.readline().strip()
+        except IOError as e:
+            sys.stderr.write("ERROR: {}\n".format(e))
+            sys.exit(1)
+
+    try:
+        res = www.post(url, admin_token, public_key=public_key)
+        print("server: {message}".format(**res))
+    except www.WWWError as e:
+        sys.stderr.write("ERROR: {}\n".format(e))
+        sys.exit(1)
+    except (KeyError, TypeError):
+        sys.stderr.write("ERROR: invalid response\n")
+        sys.exit(1)
+
+
 @cli.command("list-servers")
 @click.pass_obj
 def list_servers(options: Dict[str, str]) -> None:
