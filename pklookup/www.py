@@ -10,11 +10,11 @@ class WWWError(Exception):
     pass
 
 
-def get(url: str, auth: str=None) -> Dict:
+def get(url: str, auth: str=None, **kwargs: Any) -> Dict:
     """
     Send a GET request.
     """
-    return _send(url, auth)
+    return _send(url, auth, **kwargs)
 
 
 def post(url: str, auth: str=None, **kwargs: Any) -> Dict:

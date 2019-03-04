@@ -140,6 +140,26 @@ class GetTest(TestCase):
 
         self.assertEqual(req.headers, {"Authorization": "bearer abcd"})
 
+    def test_data(self, mock: MagicMock) -> None:
+        mock.return_value = URLOpenMock()
+
+        www.get("https://example.com", auth="abc", a="b", x="y")
+
+        args, _kwargs = mock.call_args
+        req = args[0]
+
+        headers = {
+            "Authorization": "bearer abc",
+            "Content-type": "application/json"
+        }
+        self.assertEqual(req.headers, headers)
+
+        data = {
+            "a": "b",
+            "x": "y"
+        }
+        self.assertEqual(json.loads(req.data.decode("utf-8")), data)
+
     def test_http_error_messsage(self, mock: MagicMock) -> None:
         fp = io.BytesIO(json.dumps({"message": "xyz"}).encode("utf-8"))
         exc = HTTPError("url", 403, "forbidden", {}, fp)  # type: ignore
