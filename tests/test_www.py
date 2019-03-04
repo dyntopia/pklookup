@@ -195,4 +195,4 @@ class PostTest(TestCase):
             "a": "b",
             "x": "y"
         }
-        self.assertEqual(req.data, json.dumps(data).encode("utf-8"))
+        self.assertEqual(json.loads(req.data.decode("utf-8")), data)
