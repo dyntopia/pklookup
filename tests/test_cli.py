@@ -20,7 +20,8 @@ class CliTest(TestCase):
             result = runner.invoke(cli.cli, [
                 "--config-file",
                 tmp.name,
-                "add-token"
+                "token",
+                "add"
             ])
             self.assertNotEqual(result.exit_code, 0)
 
@@ -37,7 +38,8 @@ class CliTest(TestCase):
             runner.invoke(cli.cli, [
                 "--config-file",
                 tmp.name,
-                "add-token"
+                "token",
+                "add"
             ])
             self.assertEqual(mock.call_count, 1)
 
@@ -57,7 +59,7 @@ class AddTokenTest(TestCase):
 
     def test_no_role(self) -> None:
         runner = CliRunner()
-        result = runner.invoke(cli.add_token)
+        result = runner.invoke(cli.token_add)
         self.assertNotEqual(result.exit_code, 0)
 
     @patch("pklookup.www.post")  # type: ignore
@@ -68,7 +70,8 @@ class AddTokenTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "add-token",
+            "token",
+            "add"
             "--role=xyz",
             "--description=desc",
         ])
@@ -82,7 +85,8 @@ class AddTokenTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "add-token",
+            "token",
+            "add",
             "--role=server",
             "--description=desc",
         ])
@@ -96,7 +100,8 @@ class AddTokenTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "add-token",
+            "token",
+            "add",
             "--role=admin",
             "--description=desc",
         ])
@@ -116,7 +121,8 @@ class AddTokenTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "add-token",
+            "token",
+            "add",
             "--role=server",
             "--description=desc",
         ])
@@ -136,7 +142,8 @@ class AddTokenTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "add-token",
+            "token",
+            "add",
             "--role=admin",
         ])
         self.assertTrue("invalid response" in result.output)
@@ -150,7 +157,8 @@ class AddTokenTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "add-token",
+            "token",
+            "add",
             "--role=admin",
         ])
         self.assertTrue("invalid response" in result.output)
@@ -178,7 +186,8 @@ class ListTokenTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "list-tokens"
+            "token",
+            "list"
         ])
         self.assertTrue("invalid token list" in result.output)
         self.assertEqual(result.exit_code, 1)
@@ -196,7 +205,8 @@ class ListTokenTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "list-tokens"
+            "token",
+            "list"
         ])
         self.assertTrue("invalid token list" in result.output)
         self.assertEqual(result.exit_code, 1)
@@ -213,7 +223,8 @@ class ListTokenTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "list-tokens"
+            "token",
+            "list"
         ])
         self.assertTrue("invalid token list" in result.output)
         self.assertEqual(result.exit_code, 1)
@@ -226,7 +237,8 @@ class ListTokenTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "list-tokens"
+            "token",
+            "list"
         ])
         self.assertEqual(result.exit_code, 1)
 
@@ -243,7 +255,8 @@ class ListTokenTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "list-tokens"
+            "token",
+            "list"
         ])
 
         for key, value in mock.return_value["tokens"][0].items():

@@ -37,14 +37,19 @@ def cli(ctx: click.Context, config_file: str) -> None:
     }
 
 
-@cli.command("add-token")
+@cli.group()
+def token() -> None:
+    pass
+
+
+@token.command("add")
 @click.option("--description", "-d")
 @click.option("--role", "-r", required=True, type=click.Choice([
     "admin",
     "server"
 ]))
 @click.pass_obj
-def add_token(options: Dict[str, str], role: str, description: str) -> None:
+def token_add(options: Dict[str, str], role: str, description: str) -> None:
     url = "{url}/token".format(**options)
     admin_token = options["admin_token"]
 
@@ -59,9 +64,9 @@ def add_token(options: Dict[str, str], role: str, description: str) -> None:
         sys.exit(1)
 
 
-@cli.command("list-tokens")
+@token.command("list")
 @click.pass_obj
-def list_tokens(options: Dict[str, str]) -> None:
+def token_list(options: Dict[str, str]) -> None:
     url = "{url}/token".format(**options)
     admin_token = options["admin_token"]
 
