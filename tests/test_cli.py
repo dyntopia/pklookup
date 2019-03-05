@@ -481,6 +481,7 @@ class ListServerTest(TestCase):
             "port": "1234",
             "key_type": "rsa",
             "key_data": "...",
+            "key_comment": "xyz",
             "created": "..."
         }]}
 
