@@ -147,7 +147,7 @@ def server_save_key(options: Dict[str, str], server_id: int) -> None:
 
     try:
         res = www.get(url, admin_token, id=server_id)
-        entry = "{ip} {public_key}".format(**res["servers"][0])
+        entry = "{ip} {key_type} {key_data}".format(**res["servers"][0])
     except www.WWWError as e:
         sys.stderr.write("ERROR: {}\n".format(e))
         sys.exit(1)

@@ -656,8 +656,9 @@ class SaveKeyTest(TestCase):
             "token_id": "1",
             "ip": "1.2.3.4",
             "port": "1234",
-            "key_type": "rsa",
-            "public_key": "type key comment",
+            "key_type": "ssh-rsa",
+            "key_data": "data",
+            "key_comment": "comment",
             "created": "..."
         }]}
 
@@ -671,5 +672,5 @@ class SaveKeyTest(TestCase):
         ])
 
         self.assertEqual(self.known_hosts.read(),
-                         b"1.2.3.4 type key comment\n")
+                         b"1.2.3.4 ssh-rsa data\n")
         self.assertEqual(result.exit_code, 0)
