@@ -115,7 +115,7 @@ def list_servers(options: Dict[str, str]) -> None:
             "ip",
             "port",
             "key_type",
-            "public_key",
+            "key_data",
             "created"]
         tabulate(headers, res["servers"])
     except www.WWWError as e:

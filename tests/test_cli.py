@@ -457,7 +457,7 @@ class ListServerTest(TestCase):
             "ip": "1.2.3.4",
             "port": "1234",
             "key_type": "rsa",
-            "public_key": "...",
+            "key_data": "...",
             "created": "..."
         }]}
 
