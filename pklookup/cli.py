@@ -1,6 +1,7 @@
 import configparser
 import getpass
 import os
+import shutil
 import sys
 from typing import Dict, List
 
@@ -155,7 +156,8 @@ def tabulate(header: List[str], rows: List[Dict[str, str]]) -> None:
     """
     Print rows as a table with the given headers.
     """
-    table = texttable.Texttable()
+    size = shutil.get_terminal_size()  # type: ignore
+    table = texttable.Texttable(max_width=size.columns)
     table.header(header)
     for row in rows:
         table.add_row([row[key] for key in header])
