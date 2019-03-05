@@ -76,10 +76,15 @@ def list_tokens(options: Dict[str, str]) -> None:
         sys.exit(1)
 
 
-@cli.command("add-server")
+@cli.group()
+def server() -> None:
+    pass
+
+
+@server.command("add")
 @click.option("--public-key", required=True)
 @click.pass_obj
-def add_server(options: Dict[str, str], public_key: str) -> None:
+def server_add(options: Dict[str, str], public_key: str) -> None:
     url = "{url}/server".format(**options)
     admin_token = options["admin_token"]
 
@@ -102,9 +107,9 @@ def add_server(options: Dict[str, str], public_key: str) -> None:
         sys.exit(1)
 
 
-@cli.command("list-servers")
+@server.command("list")
 @click.pass_obj
-def list_servers(options: Dict[str, str]) -> None:
+def server_list(options: Dict[str, str]) -> None:
     url = "{url}/server".format(**options)
     admin_token = options["admin_token"]
 
@@ -127,10 +132,10 @@ def list_servers(options: Dict[str, str]) -> None:
         sys.exit(1)
 
 
-@cli.command("save-key")
+@server.command("save-key")
 @click.option("--id", "server_id", type=int, required=True)
 @click.pass_obj
-def save_key(options: Dict[str, str], server_id: int) -> None:
+def server_save_key(options: Dict[str, str], server_id: int) -> None:
     url = "{url}/server".format(**options)
     admin_token = options["admin_token"]
 

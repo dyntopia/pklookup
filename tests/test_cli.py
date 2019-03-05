@@ -268,7 +268,7 @@ class AddServerTest(TestCase):
 
     def test_no_public_key(self) -> None:
         runner = CliRunner()
-        result = runner.invoke(cli.add_server)
+        result = runner.invoke(cli.server_add)
         self.assertNotEqual(result.exit_code, 0)
 
     def test_public_key_not_found(self) -> None:
@@ -279,7 +279,8 @@ class AddServerTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "add-server",
+            "server",
+            "add",
             "--public-key=@{}".format(tmp.name),
         ])
         self.assertTrue("No such file or directory" in result.output)
@@ -293,7 +294,8 @@ class AddServerTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "add-server",
+            "server",
+            "add",
             "--public-key=asdf",
         ])
         self.assertTrue("errmsg" in result.output)
@@ -307,7 +309,8 @@ class AddServerTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "add-server",
+            "server",
+            "add",
             "--public-key=asdf",
         ])
 
@@ -330,7 +333,8 @@ class AddServerTest(TestCase):
             result = runner.invoke(cli.cli, [
                 "--config-file",
                 self.config.name,
-                "add-server",
+                "server",
+                "add",
                 "--public-key=@{}".format(tmp.name),
             ])
 
@@ -349,7 +353,8 @@ class AddServerTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "add-server",
+            "server",
+            "add",
             "--public-key=asdf",
         ])
         self.assertTrue("invalid response" in result.output)
@@ -363,7 +368,8 @@ class AddServerTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "add-server",
+            "server",
+            "add",
             "--public-key=asdf",
         ])
         self.assertTrue("invalid response" in result.output)
@@ -391,7 +397,8 @@ class ListServerTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "list-servers"
+            "server",
+            "list"
         ])
         self.assertTrue("invalid server list" in result.output)
         self.assertEqual(result.exit_code, 1)
@@ -412,7 +419,8 @@ class ListServerTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "list-servers"
+            "server",
+            "list"
         ])
         self.assertTrue("invalid server list" in result.output)
         self.assertEqual(result.exit_code, 1)
@@ -432,7 +440,8 @@ class ListServerTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "list-servers"
+            "server",
+            "list"
         ])
         self.assertTrue("invalid server list" in result.output)
         self.assertEqual(result.exit_code, 1)
@@ -445,7 +454,8 @@ class ListServerTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "list-servers"
+            "server",
+            "list"
         ])
         self.assertEqual(result.exit_code, 1)
 
@@ -465,7 +475,8 @@ class ListServerTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
-            "list-servers"
+            "server",
+            "list"
         ])
 
         for key, value in mock.return_value["servers"][0].items():
@@ -496,6 +507,7 @@ class SaveKeyTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
+            "server",
             "save-key",
         ])
         self.assertNotEqual(result.exit_code, 0)
@@ -505,6 +517,7 @@ class SaveKeyTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
+            "server",
             "save-key",
             "--id=asdf"
         ])
@@ -518,6 +531,7 @@ class SaveKeyTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
+            "server",
             "save-key",
             "--id=0"
         ])
@@ -540,6 +554,7 @@ class SaveKeyTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
+            "server",
             "save-key",
             "--id=0"
         ])
@@ -561,6 +576,7 @@ class SaveKeyTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
+            "server",
             "save-key",
             "--id=0"
         ])
@@ -582,6 +598,7 @@ class SaveKeyTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
+            "server",
             "save-key",
             "--id=0"
         ])
@@ -596,6 +613,7 @@ class SaveKeyTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
+            "server",
             "save-key",
             "--id=0"
         ])
@@ -610,6 +628,7 @@ class SaveKeyTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
+            "server",
             "save-key",
             "--id=0"
         ])
@@ -632,6 +651,7 @@ class SaveKeyTest(TestCase):
         result = runner.invoke(cli.cli, [
             "--config-file",
             self.config.name,
+            "server",
             "save-key",
             "--id=0"
         ])
