@@ -218,3 +218,44 @@ class PostTest(TestCase):
             "x": "y"
         }
         self.assertEqual(json.loads(req.data.decode("utf-8")), data)
+
+
+@patch("urllib.request.urlopen")
+class DeleteTest(TestCase):
+    def test_method(self, mock: MagicMock) -> None:
+        mock.return_value = URLOpenMock()
+
+        www.WWW("https://example.com").delete()
+
+        args, _kwargs = mock.call_args
+        req = args[0]
+        self.assertEqual(req.method, "DELETE")
+
+    def test_auth_header(self, mock: MagicMock) -> None:
+        mock.return_value = URLOpenMock()
+
+        www.WWW("https://example.com", token="xyz").delete()
+
+        args, _kwargs = mock.call_args
+        req = args[0]
+        self.assertEqual(req.headers, {"Authorization": "bearer xyz"})
+
+    def test_data(self, mock: MagicMock) -> None:
+        mock.return_value = URLOpenMock()
+
+        www.WWW("https://example.com", token="abc").delete(a="b", x="y")
+
+        args, _kwargs = mock.call_args
+        req = args[0]
+
+        headers = {
+            "Authorization": "bearer abc",
+            "Content-type": "application/json"
+        }
+        self.assertEqual(req.headers, headers)
+
+        data = {
+            "a": "b",
+            "x": "y"
+        }
+        self.assertEqual(json.loads(req.data.decode("utf-8")), data)

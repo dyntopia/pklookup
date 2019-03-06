@@ -22,6 +22,12 @@ class WWW:
         """
         return self._send(path, "GET", **kwargs)
 
+    def delete(self, path: str="/", **kwargs: Any) -> Dict:
+        """
+        Send a DELETE request.
+        """
+        return self._send(path, "DELETE", **kwargs)
+
     def post(self, path: str="/", **kwargs: Any) -> Dict:
         """
         Send a POST request.
