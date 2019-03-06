@@ -63,6 +63,21 @@ def token_add(options: Dict, role: str, description: str) -> None:
         sys.exit(1)
 
 
+@token.command("delete")
+@click.option("--id", "token_id", type=int, required=True)
+@click.pass_obj
+def token_delete(options: Dict, token_id: int) -> None:
+    try:
+        res = options["www"].delete("token", id=token_id)
+        print("token: {message}".format(**res))
+    except WWWError as e:
+        sys.stderr.write("ERROR: {}\n".format(e))
+        sys.exit(1)
+    except (KeyError, TypeError):
+        sys.stderr.write("ERROR: invalid response\n")
+        sys.exit(1)
+
+
 @token.command("list")
 @click.pass_obj
 def token_list(options: Dict) -> None:
