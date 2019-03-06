@@ -8,7 +8,7 @@ from typing import Dict, List
 import click
 import texttable
 
-from . import www
+from .www import WWW, WWWError
 
 
 @click.group()
@@ -22,18 +22,20 @@ def cli(ctx: click.Context, config_file: str) -> None:
     if not url:
         sys.stderr.write("ERROR: no 'url' in {}\n".format(config_file))
         sys.exit(1)
+    url = "{}/api/v1".format(url)
 
     admin_token = config.get("pklookup", "admin_token", fallback="")
     if not admin_token:
         admin_token = getpass.getpass("Admin token: ")
 
+    cafile = config.get("pklookup", "cafile", fallback="") or None
+
     known_hosts = os.path.expanduser(config.get("pklookup", "known_hosts",
                                                 fallback="~/known_hosts"))
 
     ctx.obj = {
-        "admin_token": admin_token,
-        "url": "{}/api/v1".format(url),
-        "known_hosts": known_hosts
+        "known_hosts": known_hosts,
+        "www": WWW(url, token=admin_token, cafile=cafile)
     }
 
 
@@ -49,14 +51,11 @@ def token() -> None:
     "server"
 ]))
 @click.pass_obj
-def token_add(options: Dict[str, str], role: str, description: str) -> None:
-    url = "{url}/token".format(**options)
-    admin_token = options["admin_token"]
-
+def token_add(options: Dict, role: str, description: str) -> None:
     try:
-        res = www.post(url, admin_token, role=role, description=description)
+        res = options["www"].post("token", role=role, description=description)
         print("{} token: {token}".format(role, **res))
-    except www.WWWError as e:
+    except WWWError as e:
         sys.stderr.write("ERROR: {}\n".format(e))
         sys.exit(1)
     except (KeyError, TypeError):
@@ -66,14 +65,11 @@ def token_add(options: Dict[str, str], role: str, description: str) -> None:
 
 @token.command("list")
 @click.pass_obj
-def token_list(options: Dict[str, str]) -> None:
-    url = "{url}/token".format(**options)
-    admin_token = options["admin_token"]
-
+def token_list(options: Dict) -> None:
     try:
-        res = www.get(url, admin_token)
+        res = options["www"].get("token")
         tabulate(["id", "role", "description", "created"], res["tokens"])
-    except www.WWWError as e:
+    except WWWError as e:
         sys.stderr.write("ERROR: {}\n".format(e))
         sys.exit(1)
     except (KeyError, TypeError):
@@ -89,10 +85,7 @@ def server() -> None:
 @server.command("add")
 @click.option("--public-key", required=True)
 @click.pass_obj
-def server_add(options: Dict[str, str], public_key: str) -> None:
-    url = "{url}/server".format(**options)
-    admin_token = options["admin_token"]
-
+def server_add(options: Dict, public_key: str) -> None:
     if public_key.startswith("@"):
         try:
             with open(public_key[1:], "r") as f:
@@ -102,9 +95,9 @@ def server_add(options: Dict[str, str], public_key: str) -> None:
             sys.exit(1)
 
     try:
-        res = www.post(url, admin_token, public_key=public_key)
+        res = options["www"].post("server", public_key=public_key)
         print("server: {message}".format(**res))
-    except www.WWWError as e:
+    except WWWError as e:
         sys.stderr.write("ERROR: {}\n".format(e))
         sys.exit(1)
     except (KeyError, TypeError):
@@ -114,12 +107,9 @@ def server_add(options: Dict[str, str], public_key: str) -> None:
 
 @server.command("list")
 @click.pass_obj
-def server_list(options: Dict[str, str]) -> None:
-    url = "{url}/server".format(**options)
-    admin_token = options["admin_token"]
-
+def server_list(options: Dict) -> None:
     try:
-        res = www.get(url, admin_token)
+        res = options["www"].get("server")
         headers = [
             "id",
             "token_id",
@@ -130,7 +120,7 @@ def server_list(options: Dict[str, str]) -> None:
             "key_comment",
             "created"]
         tabulate(headers, res["servers"])
-    except www.WWWError as e:
+    except WWWError as e:
         sys.stderr.write("ERROR: {}\n".format(e))
         sys.exit(1)
     except (KeyError, TypeError):
@@ -141,14 +131,11 @@ def server_list(options: Dict[str, str]) -> None:
 @server.command("save-key")
 @click.option("--id", "server_id", type=int, required=True)
 @click.pass_obj
-def server_save_key(options: Dict[str, str], server_id: int) -> None:
-    url = "{url}/server".format(**options)
-    admin_token = options["admin_token"]
-
+def server_save_key(options: Dict, server_id: int) -> None:
     try:
-        res = www.get(url, admin_token, id=server_id)
+        res = options["www"].get("server", id=server_id)
         entry = "{ip} {key_type} {key_data}".format(**res["servers"][0])
-    except www.WWWError as e:
+    except WWWError as e:
         sys.stderr.write("ERROR: {}\n".format(e))
         sys.exit(1)
     except IndexError:

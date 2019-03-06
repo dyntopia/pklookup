@@ -39,83 +39,85 @@ class SendOnlineTest(TestCase):
 
     def test_expired(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://expired.badssl.com/")
+            www.WWW("https://expired.badssl.com/")._send("", "GET")
 
     def test_wrong_host(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://wrong.host.badssl.com/")
+            www.WWW("https://wrong.host.badssl.com/")._send("", "GET")
 
     def test_self_signed(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://self-signed.badssl.com/")
+            www.WWW("https://self-signed.badssl.com/")._send("", "GET")
 
     def test_untrusted_root(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://untrusted-root.badssl.com/")
+            www.WWW("https://untrusted-root.badssl.com/")._send("", "GET")
 
     def test_rc4_md5(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://rc4-md5.badssl.com/")
+            www.WWW("https://rc4-md5.badssl.com/")._send("", "GET")
 
     def test_rc4(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://rc4.badssl.com/")
+            www.WWW("https://rc4.badssl.com/")._send("", "GET")
 
     def test_3des(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://3des.badssl.com/")
+            www.WWW("https://3des.badssl.com/")._send("", "GET")
 
     def test_null(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://null.badssl.com/")
+            www.WWW("https://null.badssl.com/")._send("", "GET")
 
     def test_dh480(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://dh480.badssl.com/")
+            www.WWW("https://dh480.badssl.com/")._send("", "GET")
 
     def test_dh512(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://dh512.badssl.com/")
+            www.WWW("https://dh512.badssl.com/")._send("", "GET")
 
     def test_invalid_expected_sct(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://invalid-expected-sct.badssl.com/")
+            www.WWW("https://invalid-expected-sct.badssl.com/") \
+               ._send("", "GET")
 
     def test_subdomain_preloaded_hsts(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://subdomain.preloaded-hsts.badssl.com/")
+            www.WWW("https://subdomain.preloaded-hsts.badssl.com/") \
+               ._send("", "GET")
 
     def test_superfish(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://superfish.badssl.com/")
+            www.WWW("https://superfish.badssl.com/")._send("", "GET")
 
     def test_e_dell_root(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://edellroot.badssl.com/")
+            www.WWW("https://edellroot.badssl.com/")._send("", "GET")
 
     def test_dsd_test_provider(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://dsdtestprovider.badssl.com/")
+            www.WWW("https://dsdtestprovider.badssl.com/")._send("", "GET")
 
     def test_preact_cli(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://preact-cli.badssl.com/")
+            www.WWW("https://preact-cli.badssl.com/")._send("", "GET")
 
     def test_webpack_dev_server(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://webpack-dev-server.badssl.com/")
+            www.WWW("https://webpack-dev-server.badssl.com/")._send("", "GET")
 
     def test_mitm_software(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://mitm-software.badssl.com/")
+            www.WWW("https://mitm-software.badssl.com/")._send("", "GET")
 
     def test_sha1_2016(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://sha1-2016.badssl.com/")
+            www.WWW("https://sha1-2016.badssl.com/")._send("", "GET")
 
     def test_sha1_2017(self) -> None:
         with self.assertRaises(www.WWWError):
-            www._send("https://sha1-2017.badssl.com/")
+            www.WWW("https://sha1-2017.badssl.com/")._send("", "GET")
 # pylint: enable=protected-access,too-many-public-methods
 
 
@@ -124,7 +126,7 @@ class GetTest(TestCase):
     def test_method(self, mock: MagicMock) -> None:
         mock.return_value = URLOpenMock()
 
-        www.get("https://example.com")
+        www.WWW("https://example.com").get()
 
         args, _kwargs = mock.call_args
         req = args[0]
@@ -133,7 +135,7 @@ class GetTest(TestCase):
     def test_auth_header(self, mock: MagicMock) -> None:
         mock.return_value = URLOpenMock()
 
-        www.get("https://example.com", auth="abcd")
+        www.WWW("https://example.com", token="abcd").get()
 
         args, _kwargs = mock.call_args
         req = args[0]
@@ -143,7 +145,7 @@ class GetTest(TestCase):
     def test_data(self, mock: MagicMock) -> None:
         mock.return_value = URLOpenMock()
 
-        www.get("https://example.com", auth="abc", a="b", x="y")
+        www.WWW("https://example.com", token="abc").get(a="b", x="y")
 
         args, _kwargs = mock.call_args
         req = args[0]
@@ -166,7 +168,7 @@ class GetTest(TestCase):
         mock.return_value = URLOpenMock(b"msg", exc)
 
         with self.assertRaises(www.WWWError):
-            www.get("https://example.com")
+            www.WWW("https://example.com").get()
 
     def test_http_error_no_messsage(self, mock: MagicMock) -> None:
         fp = io.BytesIO(b"abcd")
@@ -174,7 +176,7 @@ class GetTest(TestCase):
         mock.return_value = URLOpenMock(b"msg", exc)
 
         with self.assertRaises(www.WWWError):
-            www.get("https://example.com")
+            www.WWW("https://example.com").get()
 
 
 @patch("urllib.request.urlopen")
@@ -182,7 +184,7 @@ class PostTest(TestCase):
     def test_method(self, mock: MagicMock) -> None:
         mock.return_value = URLOpenMock()
 
-        www.post("https://example.com")
+        www.WWW("https://example.com").post()
 
         args, _kwargs = mock.call_args
         req = args[0]
@@ -191,7 +193,7 @@ class PostTest(TestCase):
     def test_auth_header(self, mock: MagicMock) -> None:
         mock.return_value = URLOpenMock()
 
-        www.post("https://example.com", auth="xyz")
+        www.WWW("https://example.com", token="xyz").post()
 
         args, _kwargs = mock.call_args
         req = args[0]
@@ -200,7 +202,7 @@ class PostTest(TestCase):
     def test_data(self, mock: MagicMock) -> None:
         mock.return_value = URLOpenMock()
 
-        www.post("https://example.com", auth="abc", a="b", x="y")
+        www.WWW("https://example.com", token="abc").post(a="b", x="y")
 
         args, _kwargs = mock.call_args
         req = args[0]

@@ -62,7 +62,7 @@ class AddTokenTest(TestCase):
         result = runner.invoke(cli.token_add)
         self.assertNotEqual(result.exit_code, 0)
 
-    @patch("pklookup.www.post")  # type: ignore
+    @patch("pklookup.www.WWW.post")  # type: ignore
     def test_invalid_role(self, mock: MagicMock) -> None:
         mock.return_value = {"token": "123"}
 
@@ -77,7 +77,7 @@ class AddTokenTest(TestCase):
         ])
         self.assertNotEqual(result.exit_code, 0)
 
-    @patch("pklookup.www.post")  # type: ignore
+    @patch("pklookup.www.WWW.post")  # type: ignore
     def test_failure_exception(self, mock: MagicMock) -> None:
         mock.side_effect = www.WWWError
 
@@ -92,7 +92,7 @@ class AddTokenTest(TestCase):
         ])
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.post")  # type: ignore
+    @patch("pklookup.www.WWW.post")  # type: ignore
     def test_success_admin(self, mock: MagicMock) -> None:
         mock.return_value = {"token": "xyz"}
 
@@ -107,13 +107,13 @@ class AddTokenTest(TestCase):
         ])
 
         args, kwargs = mock.call_args
-        self.assertEqual(args, ("https://url:port/api/v1/token", "abcd"))
+        self.assertEqual(args, ("token",))
         self.assertEqual(kwargs, {"role": "admin", "description": "desc"})
         self.assertEqual(mock.call_count, 1)
         self.assertEqual(result.exit_code, 0)
         self.assertTrue("xyz" in result.output)
 
-    @patch("pklookup.www.post")  # type: ignore
+    @patch("pklookup.www.WWW.post")  # type: ignore
     def test_success_server(self, mock: MagicMock) -> None:
         mock.return_value = {"token": "abcd"}
 
@@ -128,13 +128,13 @@ class AddTokenTest(TestCase):
         ])
 
         args, kwargs = mock.call_args
-        self.assertEqual(args, ("https://url:port/api/v1/token", "abcd"))
+        self.assertEqual(args, ("token",))
         self.assertEqual(kwargs, {"role": "server", "description": "desc"})
         self.assertEqual(mock.call_count, 1)
         self.assertEqual(result.exit_code, 0)
         self.assertTrue("abcd" in result.output)
 
-    @patch("pklookup.www.post")  # type: ignore
+    @patch("pklookup.www.WWW.post")  # type: ignore
     def test_invalid_type(self, mock: MagicMock) -> None:
         mock.return_value = "abcd"
 
@@ -149,7 +149,7 @@ class AddTokenTest(TestCase):
         self.assertTrue("invalid response" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.post")  # type: ignore
+    @patch("pklookup.www.WWW.post")  # type: ignore
     def test_missing_token(self, mock: MagicMock) -> None:
         mock.return_value = {"token123": "abcd"}
 
@@ -178,7 +178,7 @@ class ListTokenTest(TestCase):
     def tearDown(self) -> None:
         self.config.close()
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_invalid_type(self, mock: MagicMock) -> None:
         mock.return_value = "abcd"
 
@@ -192,7 +192,7 @@ class ListTokenTest(TestCase):
         self.assertTrue("invalid token list" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_missing_tokens(self, mock: MagicMock) -> None:
         mock.return_value = {"abc": [{
             "id": 0,
@@ -211,7 +211,7 @@ class ListTokenTest(TestCase):
         self.assertTrue("invalid token list" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_missing_id_field(self, mock: MagicMock) -> None:
         mock.return_value = {"tokens": [{
             "role": "x",
@@ -229,7 +229,7 @@ class ListTokenTest(TestCase):
         self.assertTrue("invalid token list" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_failure_exception(self, mock: MagicMock) -> None:
         mock.side_effect = www.WWWError
 
@@ -242,7 +242,7 @@ class ListTokenTest(TestCase):
         ])
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_success(self, mock: MagicMock) -> None:
         mock.return_value = {"tokens": [{
             "id": "1234",
@@ -299,7 +299,7 @@ class AddServerTest(TestCase):
         self.assertTrue("No such file or directory" in result.output)
         self.assertNotEqual(result.exit_code, 0)
 
-    @patch("pklookup.www.post")  # type: ignore
+    @patch("pklookup.www.WWW.post")  # type: ignore
     def test_failure_exception(self, mock: MagicMock) -> None:
         mock.side_effect = www.WWWError("errmsg")
 
@@ -314,7 +314,7 @@ class AddServerTest(TestCase):
         self.assertTrue("errmsg" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.post")  # type: ignore
+    @patch("pklookup.www.WWW.post")  # type: ignore
     def test_success_arg(self, mock: MagicMock) -> None:
         mock.return_value = {"message": "xyz"}
 
@@ -328,13 +328,13 @@ class AddServerTest(TestCase):
         ])
 
         args, kwargs = mock.call_args
-        self.assertEqual(args, ("https://url:port/api/v1/server", "abcd"))
+        self.assertEqual(args, ("server",))
         self.assertEqual(kwargs, {"public_key": "asdf"})
         self.assertEqual(mock.call_count, 1)
         self.assertEqual(result.exit_code, 0)
         self.assertTrue("xyz" in result.output)
 
-    @patch("pklookup.www.post")  # type: ignore
+    @patch("pklookup.www.WWW.post")  # type: ignore
     def test_success_file(self, mock: MagicMock) -> None:
         mock.return_value = {"message": "xyz"}
 
@@ -352,13 +352,13 @@ class AddServerTest(TestCase):
             ])
 
         args, kwargs = mock.call_args
-        self.assertEqual(args, ("https://url:port/api/v1/server", "abcd"))
+        self.assertEqual(args, ("server",))
         self.assertEqual(kwargs, {"public_key": "first line"})
         self.assertEqual(mock.call_count, 1)
         self.assertEqual(result.exit_code, 0)
         self.assertTrue("xyz" in result.output)
 
-    @patch("pklookup.www.post")  # type: ignore
+    @patch("pklookup.www.WWW.post")  # type: ignore
     def test_invalid_type(self, mock: MagicMock) -> None:
         mock.return_value = "abcd"
 
@@ -373,7 +373,7 @@ class AddServerTest(TestCase):
         self.assertTrue("invalid response" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.post")  # type: ignore
+    @patch("pklookup.www.WWW.post")  # type: ignore
     def test_missing_message(self, mock: MagicMock) -> None:
         mock.return_value = {"msg123": "abcd"}
 
@@ -402,7 +402,7 @@ class ListServerTest(TestCase):
     def tearDown(self) -> None:
         self.config.close()
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_invalid_type(self, mock: MagicMock) -> None:
         mock.return_value = "abcd"
 
@@ -416,7 +416,7 @@ class ListServerTest(TestCase):
         self.assertTrue("invalid server list" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_missing_servers(self, mock: MagicMock) -> None:
         mock.return_value = {"abc": [{
             "id": 0,
@@ -438,7 +438,7 @@ class ListServerTest(TestCase):
         self.assertTrue("invalid server list" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_missing_id_field(self, mock: MagicMock) -> None:
         mock.return_value = {"servers": [{
             "token_id": "1",
@@ -459,7 +459,7 @@ class ListServerTest(TestCase):
         self.assertTrue("invalid server list" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_failure_exception(self, mock: MagicMock) -> None:
         mock.side_effect = www.WWWError
 
@@ -472,7 +472,7 @@ class ListServerTest(TestCase):
         ])
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_success(self, mock: MagicMock) -> None:
         mock.return_value = {"servers": [{
             "id": "0",
@@ -537,7 +537,7 @@ class SaveKeyTest(TestCase):
         ])
         self.assertNotEqual(result.exit_code, 0)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_invalid_type(self, mock: MagicMock) -> None:
         mock.return_value = "abcd"
 
@@ -552,7 +552,7 @@ class SaveKeyTest(TestCase):
         self.assertTrue("invalid server list" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_missing_servers(self, mock: MagicMock) -> None:
         mock.return_value = {"abc": [{
             "id": 0,
@@ -575,7 +575,7 @@ class SaveKeyTest(TestCase):
         self.assertTrue("invalid server list" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_missing_ip_field(self, mock: MagicMock) -> None:
         mock.return_value = {"servers": [{
             "id": "0",
@@ -597,7 +597,7 @@ class SaveKeyTest(TestCase):
         self.assertTrue("invalid server list" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_missing_public_key_field(self, mock: MagicMock) -> None:
         mock.return_value = {"servers": [{
             "id": "0",
@@ -619,7 +619,7 @@ class SaveKeyTest(TestCase):
         self.assertTrue("invalid server list" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_empty_servers(self, mock: MagicMock) -> None:
         mock.return_value = {"servers": []}
 
@@ -634,7 +634,7 @@ class SaveKeyTest(TestCase):
         self.assertTrue("invalid server id" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_failure_exception(self, mock: MagicMock) -> None:
         mock.side_effect = www.WWWError("errmsg")
 
@@ -649,7 +649,7 @@ class SaveKeyTest(TestCase):
         self.assertTrue("errmsg" in result.output)
         self.assertEqual(result.exit_code, 1)
 
-    @patch("pklookup.www.get")  # type: ignore
+    @patch("pklookup.www.WWW.get")  # type: ignore
     def test_success(self, mock: MagicMock) -> None:
         mock.return_value = {"servers": [{
             "id": "0",
