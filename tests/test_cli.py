@@ -473,6 +473,90 @@ class AddServerTest(TestCase):
         self.assertEqual(result.exit_code, 1)
 
 
+class DeleteServerTest(TestCase):
+    def setUp(self) -> None:
+        self.config = tempfile.NamedTemporaryFile()
+        self.config.write(b"""
+                          [pklookup]\n
+                           url = https://url:port\n
+                           admin_token = abcd\n
+                           """)
+        self.config.flush()
+
+    def tearDown(self) -> None:
+        self.config.close()
+
+    def test_no_id(self) -> None:
+        runner = CliRunner()
+        result = runner.invoke(cli.server_delete)
+        self.assertNotEqual(result.exit_code, 0)
+
+    @patch("pklookup.www.WWW.delete")  # type: ignore
+    def test_failure_exception(self, mock: MagicMock) -> None:
+        mock.side_effect = www.WWWError("errmsg")
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "server",
+            "delete",
+            "--id=5",
+        ])
+        self.assertTrue("errmsg" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.WWW.delete")  # type: ignore
+    def test_success(self, mock: MagicMock) -> None:
+        mock.return_value = {"message": "xyz"}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "server",
+            "delete",
+            "--id=1",
+        ])
+
+        args, kwargs = mock.call_args
+        self.assertEqual(args, ("server",))
+        self.assertEqual(kwargs, {"id": 1})
+        self.assertEqual(mock.call_count, 1)
+        self.assertEqual(result.exit_code, 0)
+        self.assertTrue("xyz" in result.output)
+
+    @patch("pklookup.www.WWW.delete")  # type: ignore
+    def test_invalid_type(self, mock: MagicMock) -> None:
+        mock.return_value = "abcd"
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "server",
+            "delete",
+            "--id=1",
+        ])
+        self.assertTrue("invalid response" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+    @patch("pklookup.www.WWW.delete")  # type: ignore
+    def test_missing_message(self, mock: MagicMock) -> None:
+        mock.return_value = {"msg123": "abcd"}
+
+        runner = CliRunner()
+        result = runner.invoke(cli.cli, [
+            "--config-file",
+            self.config.name,
+            "server",
+            "delete",
+            "--id=1",
+        ])
+        self.assertTrue("invalid response" in result.output)
+        self.assertEqual(result.exit_code, 1)
+
+
 class ListServerTest(TestCase):
     def setUp(self) -> None:
         self.config = tempfile.NamedTemporaryFile()
