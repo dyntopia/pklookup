@@ -1,7 +1,8 @@
 import io
 import json
 import os
-from typing import Any
+import ssl
+from typing import Any, Optional
 from unittest import TestCase, TestResult
 from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError
@@ -27,9 +28,9 @@ class SendOnlineTest(TestCase):
     - https://sha1-intermediate.badssl.com
     """
 
-    def run(self, result: TestResult=None) -> Any:
+    def run(self, result: Optional[TestResult] = None) -> Any:
         try:
-            online = int(os.getenv("PKLOOKUP_ONLINE"))
+            online = int(os.getenv("PKLOOKUP_ONLINE") or "")
         except (TypeError, ValueError):
             return None
 
@@ -118,6 +119,8 @@ class SendOnlineTest(TestCase):
     def test_sha1_2017(self) -> None:
         with self.assertRaises(www.WWWError):
             www.WWW("https://sha1-2017.badssl.com/")._send("", "GET")
+
+
 # pylint: enable=protected-access,too-many-public-methods
 
 
@@ -158,13 +161,13 @@ class GetTest(TestCase):
 
         data = {
             "a": "b",
-            "x": "y"
+            "x": "y",
         }
         self.assertEqual(json.loads(req.data.decode("utf-8")), data)
 
     def test_http_error_messsage(self, mock: MagicMock) -> None:
         fp = io.BytesIO(json.dumps({"message": "xyz"}).encode("utf-8"))
-        exc = HTTPError("url", 403, "forbidden", {}, fp)  # type: ignore
+        exc = HTTPError("url", 403, "forbidden", {}, fp)
         mock.return_value = URLOpenMock(b"msg", exc)
 
         with self.assertRaises(www.WWWError):
@@ -172,7 +175,14 @@ class GetTest(TestCase):
 
     def test_http_error_no_messsage(self, mock: MagicMock) -> None:
         fp = io.BytesIO(b"abcd")
-        exc = HTTPError("url", 403, "forbidden", {}, fp)  # type: ignore
+        exc = HTTPError("url", 403, "forbidden", {}, fp)
+        mock.return_value = URLOpenMock(b"msg", exc)
+
+        with self.assertRaises(www.WWWError):
+            www.WWW("https://example.com").get()
+
+    def test_certificate_error(self, mock: MagicMock) -> None:
+        exc = ssl.CertificateError()
         mock.return_value = URLOpenMock(b"msg", exc)
 
         with self.assertRaises(www.WWWError):
@@ -215,7 +225,7 @@ class PostTest(TestCase):
 
         data = {
             "a": "b",
-            "x": "y"
+            "x": "y",
         }
         self.assertEqual(json.loads(req.data.decode("utf-8")), data)
 
@@ -250,12 +260,12 @@ class DeleteTest(TestCase):
 
         headers = {
             "Authorization": "bearer abc",
-            "Content-type": "application/json"
+            "Content-type": "application/json",
         }
         self.assertEqual(req.headers, headers)
 
         data = {
             "a": "b",
-            "x": "y"
+            "x": "y",
         }
         self.assertEqual(json.loads(req.data.decode("utf-8")), data)

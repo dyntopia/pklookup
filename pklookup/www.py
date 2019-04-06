@@ -3,7 +3,7 @@ import json
 import ssl
 import urllib.error
 import urllib.request
-from typing import Any, BinaryIO, Dict, Union
+from typing import Any, BinaryIO, Dict, Optional, Union
 
 
 class WWWError(Exception):
@@ -11,24 +11,29 @@ class WWWError(Exception):
 
 
 class WWW:
-    def __init__(self, url: str, token: str=None, cafile: str=None) -> None:
+    def __init__(
+            self,
+            url: str,
+            token: Optional[str] = None,
+            cafile: Optional[str] = None,
+    ) -> None:
         self._url = url
         self._token = token
         self._cafile = cafile
 
-    def get(self, path: str="/", **kwargs: Any) -> Dict:
+    def get(self, path: str = "/", **kwargs: Any) -> Dict:
         """
         Send a GET request.
         """
         return self._send(path, "GET", **kwargs)
 
-    def delete(self, path: str="/", **kwargs: Any) -> Dict:
+    def delete(self, path: str = "/", **kwargs: Any) -> Dict:
         """
         Send a DELETE request.
         """
         return self._send(path, "DELETE", **kwargs)
 
-    def post(self, path: str="/", **kwargs: Any) -> Dict:
+    def post(self, path: str = "/", **kwargs: Any) -> Dict:
         """
         Send a POST request.
         """
@@ -48,10 +53,12 @@ class WWW:
             data = json.dumps(kwargs).encode("utf-8")
             headers["content-type"] = "application/json"
 
-        req = urllib.request.Request("{}/{}".format(self._url, path),
-                                     data=data,
-                                     headers=headers,
-                                     method=method)
+        req = urllib.request.Request(
+            "{}/{}".format(self._url, path),
+            data=data,
+            headers=headers,
+            method=method,
+        )
         try:
             with urllib.request.urlopen(req, cafile=self._cafile) as res:
                 return self._json_decode(res)
@@ -67,7 +74,7 @@ class WWW:
         """
         data = res.read().decode("utf-8")
         try:
-            return json.loads(data)
+            return json.loads(data)  # type: ignore
         except json.JSONDecodeError:
             # This is ugly, but Flask-HTTPAuth is not RESTful.  Assume
             # that all non-json payloads are error messages to be

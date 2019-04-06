@@ -10,11 +10,15 @@ class ContextManagerMock:
 
 
 class URLOpenMock(ContextManagerMock):
-    def __init__(self, data: bytes=b"", exception: Exception=None) -> None:
+    def __init__(
+            self,
+            data: bytes = b"",
+            exception: Optional[Exception] = None,
+    ) -> None:
         self._data = data
         self._exception = exception
 
-    def read(self, amt: Optional[int]=None) -> bytes:
+    def read(self, amt: Optional[int] = None) -> bytes:
         if self._exception:
-            raise self._exception  # pylint: disable=raising-bad-type
+            raise self._exception
         return self._data[:amt or len(self._data)]

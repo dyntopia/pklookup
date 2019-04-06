@@ -10,6 +10,8 @@ import texttable
 
 from .www import WWW, WWWError
 
+ROLES = ["admin", "server"]
+
 
 @click.group()
 @click.option("--config-file", "-c", default="~/.pklookup.ini")
@@ -30,8 +32,9 @@ def cli(ctx: click.Context, config_file: str) -> None:
 
     cafile = config.get("pklookup", "cafile", fallback="") or None
 
-    known_hosts = os.path.expanduser(config.get("pklookup", "known_hosts",
-                                                fallback="~/known_hosts"))
+    known_hosts = os.path.expanduser(
+        config.get("pklookup", "known_hosts", fallback="~/known_hosts")
+    )
 
     ctx.obj = {
         "known_hosts": known_hosts,
@@ -46,10 +49,7 @@ def token() -> None:
 
 @token.command("add")
 @click.option("--description", "-d")
-@click.option("--role", "-r", required=True, type=click.Choice([
-    "admin",
-    "server"
-]))
+@click.option("--role", "-r", required=True, type=click.Choice(ROLES))
 @click.pass_obj
 def token_add(options: Dict, role: str, description: str) -> None:
     try:
@@ -148,7 +148,8 @@ def server_list(options: Dict) -> None:
             "key_type",
             "key_data",
             "key_comment",
-            "created"]
+            "created",
+        ]
         tabulate(headers, res["servers"])
     except WWWError as e:
         sys.stderr.write("ERROR: {}\n".format(e))
@@ -184,7 +185,7 @@ def tabulate(header: List[str], rows: List[Dict[str, str]]) -> None:
     """
     Print rows as a table with the given headers.
     """
-    size = shutil.get_terminal_size()  # type: ignore
+    size = shutil.get_terminal_size()
     table = texttable.Texttable(max_width=size.columns)
     table.header(header)
     for row in rows:
