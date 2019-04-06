@@ -1,2 +1,3 @@
 [run]
 source = pklookup
+omit = pklookup/__main__.py
