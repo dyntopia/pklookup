@@ -18,7 +18,7 @@ def get_requirements(filename: str) -> Iterator[str]:
 setup(
     name="pklookup",
     version=pklookup.__version__,
-    install_requires=list(get_requirements("requirements.txt")),
+    install_requires=list(get_requirements("requirements/requirements.txt")),
     entry_points={
         "console_scripts": ["pklookup = pklookup.cli:cli"]
     }
